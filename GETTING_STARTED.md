@@ -141,7 +141,7 @@ service:
     url: "postgres://<user>:<password>@fke-gtalk-pg-pgbouncer.ghn.dev:5432/donation_db?connect_timeout=3"
 ```
 
-Run the schema:
+Run the schema (just sample, can be skipped):
 
 ```bash
 psql "postgres://<user>:<password>@fke-gtalk-pg-pgbouncer.ghn.dev:5432/donation_db" < schema/note.sql
