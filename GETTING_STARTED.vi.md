@@ -139,7 +139,7 @@ service:
     url: "postgres://<user>:<password>@fke-gtalk-pg-pgbouncer.ghn.dev:5432/donation_db?connect_timeout=3"
 ```
 
-Chạy schema:
+Chạy schema(đây là ví dụ, có thể bỏ qua):
 
 ```bash
 psql "postgres://<user>:<password>@fke-gtalk-pg-pgbouncer.ghn.dev:5432/donation_db" < schema/note.sql
