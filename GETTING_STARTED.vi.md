@@ -89,14 +89,6 @@ git config --global user.name "Họ Tên"
 git config --global user.email "email@ghn.vn"
 ```
 
-### Clone template và chạy script
-
-```bash
-# Clone template repo (cần VPN)
-git clone http://gitlab.ghn.vn/fe-mobile-platform/gtalk-miniapps/gtalk-create-miniapp.git
-cd gtalk-create-miniapp
-```
-
 **macOS / Linux / Git Bash:**
 ```bash
 bash create.sh
