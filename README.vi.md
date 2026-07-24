@@ -41,8 +41,7 @@ Trước khi chạy script, bạn cần:
 ### Bước 2 — Clone template repo (cần VPN)
 
 ```bash
-git clone http://gitlab.ghn.vn/fe-mobile-platform/gtalk-miniapps/gtalk-create-miniapp.git
-cd gtalk-create-miniapp
+git clone https://github.com/ghntech/gtalk-create-miniapp.git
 ```
 
 ### Bước 3 — Chạy script tạo project
