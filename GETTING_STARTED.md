@@ -91,14 +91,6 @@ git config --global user.name "Your Name"
 git config --global user.email "your.email@ghn.vn"
 ```
 
-### Clone the template and run the scaffolder
-
-```bash
-# Clone the template repo (requires VPN)
-git clone http://gitlab.ghn.vn/fe-mobile-platform/gtalk-miniapps/gtalk-create-miniapp.git
-cd gtalk-create-miniapp
-```
-
 **macOS / Linux / Git Bash:**
 ```bash
 bash create.sh
