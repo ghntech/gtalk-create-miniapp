@@ -41,8 +41,7 @@ Before running the script, you need:
 ### Step 2 — Clone the template repo (requires VPN)
 
 ```bash
-git clone http://gitlab.ghn.vn/fe-mobile-platform/gtalk-miniapps/gtalk-create-miniapp.git
-cd gtalk-create-miniapp
+git clone https://github.com/ghntech/gtalk-create-miniapp.git
 ```
 
 ### Step 3 — Run the scaffolder
