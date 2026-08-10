@@ -9,25 +9,29 @@
 #
 # Naming convention:
 #   App name    : single word, lowercase (e.g. "donation")
-#   Repo name   : miniapp_<appname>_service  (e.g. "miniapp_donation_service")
+#   Repo name   : miniapp-<appname>-service  (e.g. "miniapp-donation-service")
 #   Miniapp ID  : <appname>                  (e.g. "donation")
 #   URL path    : /apps/<appname>/           (e.g. /apps/donation/)
-#   Go module   : gitlab.ghn.vn/fe-mobile-platform/gtalk-miniapps/miniapp_<appname>_service
-#   Go package  : miniapp_<appname>_service
-#   DB name     : <appname>_db               (e.g. "donation_db")
+#   Go module   : gitlab.ghn.vn/fe-mobile-platform/gtalk-miniapps/miniapp-<appname>-service
+#   Go package  : miniapp-<appname>-service
+#   DB name     : gtalk_miniapp_<appname>_db (e.g. "gtalk_miniapp_donation_db")
+#   Owner       : <appname>_team             (e.g. "donation_team")
 # ─────────────────────────────────────────────────────────────────────────────
 
 $ErrorActionPreference = "Stop"
 
 # ── Template constants ────────────────────────────────────────────────────────
-$TEMPLATE_ZIP_URL      = "https://s3-sgn10.fptcloud.com/gtalk-public/miniapp/gtalk-create-miniapp-template.zip"
-$TEMPLATE_MODULE       = "gitlab.ghn.vn/fe-mobile-platform/gtalk-miniapps/gtalk-create-miniapp"
-$TEMPLATE_MODULE_PREFIX= "gitlab.ghn.vn/fe-mobile-platform/gtalk-miniapps"
-$TEMPLATE_REPO_NAME    = "gtalk-create-miniapp"
-$TEMPLATE_PKG          = "gtalk_miniapp"
-$TEMPLATE_ID           = "gtalk-create-miniapp"
-$TEMPLATE_DB           = "gtalk_miniapp_note_db"
-$TEMPLATE_FE_NAME      = "gtalk-note-web"
+$TEMPLATE_ZIP_URL            = "https://s3-sgn10.fptcloud.com/gtalk-public/miniapp/gtalk-create-miniapp-template.zip"
+$TEMPLATE_MODULE             = "gitlab.ghn.vn/fe-mobile-platform/gtalk-miniapps/gtalk-create-miniapp"
+$TEMPLATE_MODULE_PREFIX      = "gitlab.ghn.vn/fe-mobile-platform/gtalk-miniapps"
+$TEMPLATE_REPO_NAME          = "gtalk-create-miniapp"
+$TEMPLATE_PKG                = "gtalk_miniapp"
+$TEMPLATE_ID                 = "gtalk-create-miniapp"
+$TEMPLATE_DB                 = "gtalk_miniapp_note_db"
+$TEMPLATE_FE_NAME            = "gtalk-note-web"
+$TEMPLATE_CONFIG_STRUCT      = "NoteAppConfig"
+$TEMPLATE_CONFIG_DB_FIELD    = "NoteDB"
+$TEMPLATE_CONFIG_DB_KEY      = "noteDB"
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 function Write-Banner {
@@ -108,10 +112,12 @@ while ($true) {
 }
 
 # Derived names
-$REPO_NAME    = "miniapp_${APP_NAME}_service"
-$GO_PKG       = "miniapp_${APP_NAME}_service"
+$REPO_NAME    = "miniapp-${APP_NAME}-service"
+$GO_PKG       = "miniapp-${APP_NAME}-service"
 $MINIAPP_ID   = $APP_NAME
-$DEFAULT_DB   = "${APP_NAME}_db"
+$DB_NAME      = "gtalk_miniapp_${APP_NAME}_db"
+$OWNER        = "${APP_NAME}_team"
+$TARGET_DIR   = ".\$REPO_NAME"
 
 Write-Host ""
 Write-Host "  Derived names:" -ForegroundColor Cyan
@@ -119,41 +125,6 @@ Write-Host "    Repo name   : $REPO_NAME"
 Write-Host "    Miniapp ID  : $MINIAPP_ID"
 Write-Host "    URL path    : /apps/$MINIAPP_ID/"
 Write-Host "    Go module   : $TEMPLATE_MODULE_PREFIX/$REPO_NAME"
-Write-Host ""
-
-# DB name
-$DB_NAME_INPUT = Read-Host "  DB name (press Enter to use default: $DEFAULT_DB)"
-if ($DB_NAME_INPUT.Trim() -eq "") {
-    $DB_NAME = $DEFAULT_DB
-    Write-Warn "Using default DB name: $DB_NAME. Update in conf/application-dev.yaml if needed."
-} else {
-    $DB_NAME = $DB_NAME_INPUT.Trim()
-}
-
-# Owner
-$OWNER = Read-Host "  Owner / GitLab username (press Enter to fill in later)"
-if ($OWNER.Trim() -eq "") {
-    $OWNER = "TODO"
-    Write-Warn "Owner left as 'TODO'. Update miniapp.json when you have your GitLab username."
-} else {
-    $OWNER = $OWNER.Trim()
-}
-
-# Target directory
-$DEFAULT_DIR = ".\$REPO_NAME"
-$TARGET_DIR_INPUT = Read-Host "  Create project in [$DEFAULT_DIR]"
-if ($TARGET_DIR_INPUT.Trim() -eq "") {
-    $TARGET_DIR = $DEFAULT_DIR
-} else {
-    $TARGET_DIR = $TARGET_DIR_INPUT.Trim()
-}
-
-Write-Host ""
-Write-Host "  Summary:" -ForegroundColor White
-Write-Host "    App name    : $APP_NAME"
-Write-Host "    Repo name   : $REPO_NAME"
-Write-Host "    Miniapp ID  : $MINIAPP_ID"
-Write-Host "    URL path    : /apps/$MINIAPP_ID/"
 Write-Host "    DB name     : $DB_NAME"
 Write-Host "    Owner       : $OWNER"
 Write-Host "    Directory   : $TARGET_DIR"
@@ -250,9 +221,15 @@ Replace-InDir $TEMPLATE_DB $DB_NAME $TARGET_DIR
 Write-Host "  Updating FE package name..."
 Replace-InDir $TEMPLATE_FE_NAME "$APP_NAME-web" $TARGET_DIR
 
-# 3g. Update miniapp.json
-Write-Host "  Updating miniapp.json..."
+# 3g. Config struct and DB field/key substitutions
+Write-Host "  Updating config struct and DB references..."
 $PASCAL_NAME = ToPascalCase $APP_NAME
+Replace-InDir $TEMPLATE_CONFIG_STRUCT "${PASCAL_NAME}AppConfig" $TARGET_DIR
+Replace-InDir $TEMPLATE_CONFIG_DB_FIELD "${PASCAL_NAME}DB" $TARGET_DIR
+Replace-InDir $TEMPLATE_CONFIG_DB_KEY "${APP_NAME}DB" $TARGET_DIR
+
+# 3h. Update miniapp.json
+Write-Host "  Updating miniapp.json..."
 $miniappJson = @"
 {
   "id": "$MINIAPP_ID",
@@ -261,16 +238,6 @@ $miniappJson = @"
 }
 "@
 [System.IO.File]::WriteAllText("$TARGET_DIR\miniapp.json", $miniappJson, [System.Text.Encoding]::UTF8)
-
-# 3h. Add TODO comment in dev config if DB name is default
-if ($DB_NAME_INPUT.Trim() -eq "") {
-    $devConf = "$TARGET_DIR\conf\application-dev.yaml"
-    if (Test-Path $devConf) {
-        $content = [System.IO.File]::ReadAllText($devConf, [System.Text.Encoding]::UTF8)
-        $content = $content.Replace("  noteDB:", "  # TODO: Update the DB URL below with your actual credentials`n  noteDB:")
-        [System.IO.File]::WriteAllText($devConf, $content, [System.Text.Encoding]::UTF8)
-    }
-}
 
 Write-Ok "Substitutions complete"
 Write-Host ""
@@ -317,9 +284,5 @@ Write-Host ""
 Write-Host "  6. 🚢 Tag release to trigger CI/CD:"
 Write-Host "     git tag v0.1.0; git push origin v0.1.0"
 Write-Host ""
-if ($OWNER -eq "TODO") {
-    Write-Warn "Don't forget to update 'owner' in $TARGET_DIR\miniapp.json with your GitLab username!"
-    Write-Host ""
-}
 Write-Host "📖 Full guide: docs\GETTING_STARTED.md" -ForegroundColor Cyan
 Write-Host ""

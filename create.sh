@@ -10,12 +10,13 @@
 #
 # Naming convention:
 #   App name    : single word, lowercase (e.g. "donation")
-#   Repo name   : miniapp_<appname>_service  (e.g. "miniapp_donation_service")
+#   Repo name   : miniapp-<appname>-service  (e.g. "miniapp-donation-service")
 #   Miniapp ID  : <appname>                  (e.g. "donation")
 #   URL path    : /apps/<appname>/           (e.g. /apps/donation/)
-#   Go module   : gitlab.ghn.vn/fe-mobile-platform/gtalk-miniapps/miniapp_<appname>_service
-#   Go package  : miniapp_<appname>_service
-#   DB name     : <appname>_db               (e.g. "donation_db")
+#   Go module   : gitlab.ghn.vn/fe-mobile-platform/gtalk-miniapps/miniapp-<appname>-service
+#   Go package  : miniapp-<appname>-service
+#   DB name     : gtalk_miniapp_<appname>_db (e.g. "gtalk_miniapp_donation_db")
+#   Owner       : <appname>_team             (e.g. "donation_team")
 # ─────────────────────────────────────────────────────────────────────────────
 
 set -euo pipefail
@@ -37,6 +38,9 @@ TEMPLATE_PKG="gtalk_miniapp"
 TEMPLATE_ID="gtalk-create-miniapp"
 TEMPLATE_DB="gtalk_miniapp_note_db"
 TEMPLATE_FE_NAME="gtalk-note-web"
+TEMPLATE_CONFIG_STRUCT="NoteAppConfig"
+TEMPLATE_CONFIG_DB_FIELD="NoteDB"
+TEMPLATE_CONFIG_DB_KEY="noteDB"
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 print_banner() {
@@ -168,10 +172,12 @@ main() {
   done
 
   # Derived names
-  REPO_NAME="miniapp_${APP_NAME}_service"
-  GO_PKG="miniapp_${APP_NAME}_service"
+  REPO_NAME="miniapp-${APP_NAME}-service"
+  GO_PKG="miniapp-${APP_NAME}-service"
   MINIAPP_ID="${APP_NAME}"
-  DEFAULT_DB_NAME="${APP_NAME}_db"
+  DB_NAME="gtalk_miniapp_${APP_NAME}_db"
+  OWNER="${APP_NAME}_team"
+  TARGET_DIR="./${REPO_NAME}"
 
   echo ""
   echo -e "  ${CYAN}Derived names:${RESET}"
@@ -179,44 +185,12 @@ main() {
   echo "    Miniapp ID  : ${MINIAPP_ID}"
   echo "    URL path    : /apps/${MINIAPP_ID}/"
   echo "    Go module   : ${TEMPLATE_MODULE_PREFIX}/${REPO_NAME}"
-  echo ""
-
-  # DB name (optional)
-  printf "  DB name (press Enter to use default: %s): " "$DEFAULT_DB_NAME"
-  read -r DB_NAME_INPUT
-  if [ -z "$DB_NAME_INPUT" ]; then
-    DB_NAME="$DEFAULT_DB_NAME"
-    print_warn "Using default DB name: ${DB_NAME}. Update in conf/application-dev.yaml if needed."
-  else
-    DB_NAME="$DB_NAME_INPUT"
-  fi
-
-  # Owner (optional)
-  printf "  Owner / GitLab username (press Enter to fill in later): "
-  read -r OWNER
-  if [ -z "$OWNER" ]; then
-    OWNER="TODO"
-    print_warn "Owner left as 'TODO'. Update miniapp.json when you have your GitLab username."
-  fi
-
-  # Target directory
-  DEFAULT_DIR="./${REPO_NAME}"
-  printf "  Create project in [%s]: " "$DEFAULT_DIR"
-  read -r TARGET_DIR_INPUT
-  TARGET_DIR="${TARGET_DIR_INPUT:-$DEFAULT_DIR}"
-
-  echo ""
-
-  # Confirm
-  echo -e "  ${BOLD}Summary:${RESET}"
-  echo "    App name    : ${APP_NAME}"
-  echo "    Repo name   : ${REPO_NAME}"
-  echo "    Miniapp ID  : ${MINIAPP_ID}"
-  echo "    URL path    : /apps/${MINIAPP_ID}/"
   echo "    DB name     : ${DB_NAME}"
   echo "    Owner       : ${OWNER}"
   echo "    Directory   : ${TARGET_DIR}"
   echo ""
+
+  # Confirm
   printf "  Create project? [Y/n]: "
   read -r CONFIRM
   CONFIRM="${CONFIRM:-Y}"
@@ -324,9 +298,15 @@ main() {
   echo "  Updating FE package name..."
   replace_in_dir "${TEMPLATE_FE_NAME}" "${APP_NAME}-web" "$TARGET_DIR"
 
-  # 3g. Update miniapp.json
-  echo "  Updating miniapp.json..."
+  # 3g. Config struct and DB field/key substitutions
+  echo "  Updating config struct and DB references..."
   PASCAL_NAME=$(to_pascal_case "$APP_NAME")
+  replace_in_dir "${TEMPLATE_CONFIG_STRUCT}" "${PASCAL_NAME}AppConfig" "$TARGET_DIR"
+  replace_in_dir "${TEMPLATE_CONFIG_DB_FIELD}" "${PASCAL_NAME}DB" "$TARGET_DIR"
+  replace_in_dir "${TEMPLATE_CONFIG_DB_KEY}" "${APP_NAME}DB" "$TARGET_DIR"
+
+  # 3h. Update miniapp.json
+  echo "  Updating miniapp.json..."
   cat > "${TARGET_DIR}/miniapp.json" <<EOF
 {
   "id": "${MINIAPP_ID}",
@@ -334,14 +314,6 @@ main() {
   "owner": "${OWNER}"
 }
 EOF
-
-  # 3h. Add TODO comment in dev config if DB name is default
-  if [ -z "$DB_NAME_INPUT" ]; then
-    DEV_CONF="${TARGET_DIR}/conf/application-dev.yaml"
-    if [ -f "$DEV_CONF" ]; then
-      sed_inplace "s/  noteDB:/  # TODO: Update the DB URL below with your actual credentials\n  noteDB:/" "$DEV_CONF"
-    fi
-  fi
 
   print_ok "Substitutions complete"
   echo ""
@@ -387,10 +359,6 @@ EOF
   echo "  6. 🚢 Tag release to trigger CI/CD:"
   echo "     git -C ${TARGET_DIR} tag v0.1.0 && git -C ${TARGET_DIR} push origin v0.1.0"
   echo ""
-  if [ "$OWNER" = "TODO" ]; then
-    print_warn "Don't forget to update 'owner' in ${TARGET_DIR}/miniapp.json with your GitLab username!"
-    echo ""
-  fi
   echo -e "${CYAN}📖 Full guide: docs/GETTING_STARTED.md${RESET}"
   echo ""
 }
