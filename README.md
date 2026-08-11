@@ -39,20 +39,17 @@ Before running the script, you need:
 > ⏱ VPN approval takes 1–2 business days. Request it early!
 
 ### Step 2 — Clone the template repo (requires VPN)
-Run this command in Terminal
 ```bash
 git clone https://github.com/ghntech/gtalk-create-miniapp.git
 ```
 
 ### Step 3 — Run the scaffolder
-Run this command in Terminal
 **macOS / Linux / Git Bash:**
 ```bash
 bash create.sh
 ```
 
 **Windows (PowerShell):**
-Run this command in PowerShell
 ```powershell
 .\create.ps1
 ```
