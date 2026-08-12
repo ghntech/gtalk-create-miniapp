@@ -170,6 +170,13 @@ make fe-dev
 # → http://localhost:5174
 ```
 
+### If we face the issue "gitlab no secure protocol found for repository"
+
+Try to execute this cmd first:
+```bash
+git config --global url."git@gitlab.ghn.vn:".insteadOf "https://gitlab.ghn.vn/"
+```bash
+
 ---
 
 ## Phase 7: Push to GitLab
