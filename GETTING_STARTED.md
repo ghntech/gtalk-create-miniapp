@@ -172,10 +172,10 @@ make fe-dev
 
 ### If we face the issue "gitlab no secure protocol found for repository"
 
-Try to execute this cmd first:
+Try to execute this CMD first:
 ```bash
 git config --global url."git@gitlab.ghn.vn:".insteadOf "https://gitlab.ghn.vn/"
-```bash
+```
 
 ---
 
