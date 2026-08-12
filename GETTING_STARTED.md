@@ -170,7 +170,7 @@ make fe-dev
 # → http://localhost:5174
 ```
 
-### If we face the issue "gitlab no secure protocol found for repository"
+If you face the issue **"gitlab no secure protocol found for repository"**
 
 Try to execute this CMD first:
 ```bash
