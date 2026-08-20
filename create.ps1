@@ -170,13 +170,25 @@ try {
 }
 Remove-Item $TMP_ZIP -Force -ErrorAction SilentlyContinue
 
-# The zip may extract into a single subdirectory -- detect and flatten
-$extractedItems = Get-ChildItem -Path $TMP_DIR
-if ($extractedItems.Count -eq 1 -and $extractedItems[0].PSIsContainer) {
-    Move-Item -Path $extractedItems[0].FullName -Destination $TARGET_DIR
+# The zip may extract into a single subdirectory (and possibly a __MACOSX folder).
+# Find the actual content directory (skip __MACOSX) and flatten it.
+$contentDir = $null
+foreach ($item in (Get-ChildItem -Path $TMP_DIR)) {
+    if ($item.PSIsContainer -and $item.Name -ne '__MACOSX') {
+        $contentDir = $item.FullName
+        break
+    }
+}
+
+if ($contentDir) {
+    # Single content subdirectory -- move it directly to TARGET_DIR
+    Move-Item -Path $contentDir -Destination $TARGET_DIR
     Remove-Item $TMP_DIR -Recurse -Force -ErrorAction SilentlyContinue
 } else {
-    Move-Item -Path $TMP_DIR -Destination $TARGET_DIR
+    # Files extracted directly into TMP_DIR -- move contents into TARGET_DIR
+    New-Item -ItemType Directory -Path $TARGET_DIR -Force | Out-Null
+    Get-ChildItem -Path $TMP_DIR | Move-Item -Destination $TARGET_DIR
+    Remove-Item $TMP_DIR -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 # Clean up scaffolder artifacts from the template
