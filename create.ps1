@@ -117,7 +117,7 @@ $GO_PKG       = "miniapp-${APP_NAME}-service"
 $MINIAPP_ID   = $APP_NAME
 $DB_NAME      = "gtalk_miniapp_${APP_NAME}_db"
 $OWNER        = "${APP_NAME}_team"
-$TARGET_DIR   = ".\$REPO_NAME"
+$TARGET_DIR   = Join-Path (Get-Location).Path $REPO_NAME
 
 Write-Host ""
 Write-Host "  Derived names:" -ForegroundColor Cyan
@@ -269,7 +269,7 @@ Write-Host "     Then update: $TARGET_DIR\conf\application-dev.yaml"
 Write-Host ""
 Write-Host "  4. Run locally (after DB is configured):"
 Write-Host "     cd $TARGET_DIR"
-Write-Host "     make run    # builds FE + starts server at http://localhost:8082"
+Write-Host "     make run    `# builds FE + starts server at http://localhost:8082"
 Write-Host ""
 Write-Host "  5. Push to GitLab (requires VPN + GitLab account):"
 Write-Host "     cd $TARGET_DIR"
