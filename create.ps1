@@ -230,14 +230,9 @@ Replace-InDir $TEMPLATE_CONFIG_DB_KEY "${APP_NAME}DB" $TARGET_DIR
 
 # 3h. Update miniapp.json
 Write-Host "  Updating miniapp.json..."
-$miniappJson = @"
-{
-  "id": "$MINIAPP_ID",
-  "name": "$PASCAL_NAME",
-  "owner": "$OWNER"
-}
-"@
-[System.IO.File]::WriteAllText("$TARGET_DIR\miniapp.json", $miniappJson, [System.Text.Encoding]::UTF8)
+$miniappJson = "{`n  `"id`": `"$MINIAPP_ID`",`n  `"name`": `"$PASCAL_NAME`",`n  `"owner`": `"$OWNER`"`n}`n"
+$miniappJsonPath = Join-Path $TARGET_DIR "miniapp.json"
+[System.IO.File]::WriteAllText($miniappJsonPath, $miniappJson, [System.Text.Encoding]::UTF8)
 
 Write-Ok "Substitutions complete"
 Write-Host ""
