@@ -1,5 +1,5 @@
-# ─────────────────────────────────────────────────────────────────────────────
-# create.ps1 — gtalk-create-miniapp scaffolder (Windows PowerShell)
+# -----------------------------------------------------------------------------
+# create.ps1 -- gtalk-create-miniapp scaffolder (Windows PowerShell)
 # Compatible with: Windows PowerShell 5.1+, PowerShell 7+
 #
 # Usage:
@@ -16,11 +16,11 @@
 #   Go package  : miniapp-<appname>-service
 #   DB name     : gtalk_miniapp_<appname>_db (e.g. "gtalk_miniapp_donation_db")
 #   Owner       : <appname>_team             (e.g. "donation_team")
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 $ErrorActionPreference = "Stop"
 
-# ── Template constants ────────────────────────────────────────────────────────
+# -- Template constants -------------------------------------------------------
 $TEMPLATE_ZIP_URL            = "https://s3-sgn10.fptcloud.com/gtalk-public/miniapp/gtalk-create-miniapp-template.zip"
 $TEMPLATE_MODULE             = "gitlab.ghn.vn/fe-mobile-platform/gtalk-miniapps/gtalk-create-miniapp"
 $TEMPLATE_MODULE_PREFIX      = "gitlab.ghn.vn/fe-mobile-platform/gtalk-miniapps"
@@ -33,18 +33,18 @@ $TEMPLATE_CONFIG_STRUCT      = "NoteAppConfig"
 $TEMPLATE_CONFIG_DB_FIELD    = "NoteDB"
 $TEMPLATE_CONFIG_DB_KEY      = "noteDB"
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# -- Helpers ------------------------------------------------------------------
 function Write-Banner {
     Write-Host ""
-    Write-Host "🚀 gtalk-create-miniapp scaffolder" -ForegroundColor Cyan
-    Write-Host "──────────────────────────────────────────────────────" -ForegroundColor Cyan
+    Write-Host "gtalk-create-miniapp scaffolder" -ForegroundColor Cyan
+    Write-Host "------------------------------------------------------" -ForegroundColor Cyan
     Write-Host ""
 }
 
 function Write-Step($msg)  { Write-Host $msg -ForegroundColor White }
-function Write-Ok($msg)    { Write-Host "✅ $msg" -ForegroundColor Green }
-function Write-Warn($msg)  { Write-Host "⚠️  $msg" -ForegroundColor Yellow }
-function Write-Err($msg)   { Write-Host "❌ $msg" -ForegroundColor Red }
+function Write-Ok($msg)    { Write-Host "[OK] $msg" -ForegroundColor Green }
+function Write-Warn($msg)  { Write-Host "[WARN] $msg" -ForegroundColor Yellow }
+function Write-Err($msg)   { Write-Host "[ERR] $msg" -ForegroundColor Red }
 
 function ToPascalCase($name) {
     if ($name.Length -eq 0) { return $name }
@@ -82,7 +82,7 @@ function Replace-InDir($from, $to, $dir) {
     }
 }
 
-# ── Validation ────────────────────────────────────────────────────────────────
+# -- Validation ---------------------------------------------------------------
 function Validate-AppName($name) {
     if ($name.Length -lt 2 -or $name.Length -gt 31) { return $false }
     if ($name -notmatch '^[a-z][a-z0-9]+$') { return $false }
@@ -91,11 +91,11 @@ function Validate-AppName($name) {
     return $true
 }
 
-# ── Main ──────────────────────────────────────────────────────────────────────
+# -- Main ---------------------------------------------------------------------
 Write-Banner
 
-# ── Step 1: Collect inputs ────────────────────────────────────────────────────
-Write-Step "📝 Project setup"
+# -- Step 1: Collect inputs ---------------------------------------------------
+Write-Step "[1/4] Project setup"
 Write-Host ""
 
 # App name
@@ -138,8 +138,8 @@ if ($confirm -ne "" -and $confirm -notmatch '^[Yy]') {
 
 Write-Host ""
 
-# ── Step 2: Get template ──────────────────────────────────────────────────────
-Write-Step "📦 Downloading template..."
+# -- Step 2: Get template -----------------------------------------------------
+Write-Step "[2/4] Downloading template..."
 
 if (Test-Path $TARGET_DIR) {
     Write-Err "Directory '$TARGET_DIR' already exists. Please choose a different name or remove it first."
@@ -170,7 +170,7 @@ try {
 }
 Remove-Item $TMP_ZIP -Force -ErrorAction SilentlyContinue
 
-# The zip may extract into a single subdirectory — detect and flatten
+# The zip may extract into a single subdirectory -- detect and flatten
 $extractedItems = Get-ChildItem -Path $TMP_DIR
 if ($extractedItems.Count -eq 1 -and $extractedItems[0].PSIsContainer) {
     Move-Item -Path $extractedItems[0].FullName -Destination $TARGET_DIR
@@ -193,8 +193,8 @@ Remove-Item -Path "$TARGET_DIR\bin"                  -Recurse -Force -ErrorActio
 Write-Ok "Template ready at $TARGET_DIR"
 Write-Host ""
 
-# ── Step 3: Substitutions ─────────────────────────────────────────────────────
-Write-Step "🔧 Customizing project..."
+# -- Step 3: Substitutions ----------------------------------------------------
+Write-Step "[3/4] Customizing project..."
 
 # 3a. Go module path
 Write-Host "  Updating Go module path..."
@@ -237,8 +237,8 @@ $miniappJsonPath = Join-Path $TARGET_DIR "miniapp.json"
 Write-Ok "Substitutions complete"
 Write-Host ""
 
-# ── Step 4: Git init ──────────────────────────────────────────────────────────
-Write-Step "🗂  Initializing git repository..."
+# -- Step 4: Git init ---------------------------------------------------------
+Write-Step "[4/4] Initializing git repository..."
 Push-Location $TARGET_DIR
 git init -q
 git add .
@@ -247,37 +247,37 @@ Pop-Location
 Write-Ok "Git repository initialized"
 Write-Host ""
 
-# ── Step 5: Done! ─────────────────────────────────────────────────────────────
-Write-Host "──────────────────────────────────────────────────────" -ForegroundColor Green
-Write-Host "🎉 Project '$REPO_NAME' created at $TARGET_DIR" -ForegroundColor Green
-Write-Host "   URL: https://gtalk-miniapp.ghn.vn/apps/$MINIAPP_ID/" -ForegroundColor Green
-Write-Host "──────────────────────────────────────────────────────" -ForegroundColor Green
+# -- Done! --------------------------------------------------------------------
+Write-Host "------------------------------------------------------" -ForegroundColor Green
+Write-Host "Project '$REPO_NAME' created at $TARGET_DIR" -ForegroundColor Green
+Write-Host "URL: https://gtalk-miniapp.ghn.vn/apps/$MINIAPP_ID/" -ForegroundColor Green
+Write-Host "------------------------------------------------------" -ForegroundColor Green
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor White
 Write-Host ""
-Write-Host "  1. 🔑 Request VPN (if you haven't already):"
+Write-Host "  1. Request VPN (if you haven't already):"
 Write-Host "     https://noibo.ghn.vn/eform/form/create?flowId=6676c752140753310e197f73"
 Write-Host "     Contact: tailp@ghn.vn  (takes 1-2 business days)"
 Write-Host ""
-Write-Host "  2. 🦊 Request GitLab account + repo (requires VPN):"
+Write-Host "  2. Request GitLab account + repo (requires VPN):"
 Write-Host "     Contact: tiendk@ghn.vn"
 Write-Host "     Repo name: $REPO_NAME"
 Write-Host ""
-Write-Host "  3. 🗄️  Request DB access (if your miniapp needs a database):"
+Write-Host "  3. Request DB access (if your miniapp needs a database):"
 Write-Host "     Contact your team lead for Postgres credentials + VPN ACL"
 Write-Host "     Then update: $TARGET_DIR\conf\application-dev.yaml"
 Write-Host ""
-Write-Host "  4. 💻 Run locally (after DB is configured):"
+Write-Host "  4. Run locally (after DB is configured):"
 Write-Host "     cd $TARGET_DIR"
-Write-Host "     make run          `# builds FE + starts server at http://localhost:8082"
+Write-Host "     make run    # builds FE + starts server at http://localhost:8082"
 Write-Host ""
-Write-Host "  5. 📤 Push to GitLab (requires VPN + GitLab account):"
+Write-Host "  5. Push to GitLab (requires VPN + GitLab account):"
 Write-Host "     cd $TARGET_DIR"
 Write-Host "     git remote add origin http://gitlab.ghn.vn/fe-mobile-platform/gtalk-miniapps/$REPO_NAME.git"
 Write-Host "     git push -u origin main"
 Write-Host ""
-Write-Host "  6. 🚢 Tag release to trigger CI/CD:"
+Write-Host "  6. Tag release to trigger CI/CD:"
 Write-Host "     git tag v0.1.0; git push origin v0.1.0"
 Write-Host ""
-Write-Host "📖 Full guide: docs\GETTING_STARTED.md" -ForegroundColor Cyan
+Write-Host "Full guide: docs\GETTING_STARTED.md" -ForegroundColor Cyan
 Write-Host ""
