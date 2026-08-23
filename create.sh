@@ -4,7 +4,8 @@
 # Compatible with: macOS (bash 3.2+), Linux, Git Bash on Windows
 #
 # Usage:
-#   bash create.sh
+#   bash create.sh                  # interactive mode
+#   bash create.sh <app-name>       # non-interactive (skips all prompts)
 #
 # Windows users: use create.ps1 instead (PowerShell)
 #
@@ -156,20 +157,34 @@ main() {
   echo ""
 
   # App name (single word)
-  while true; do
-    printf "  App name (single word, e.g. donation): "
-    read -r APP_NAME_RAW
-    APP_NAME=$(strip_spaces "$(to_lower "$APP_NAME_RAW")")
+  if [ -n "${1:-}" ]; then
+    # Non-interactive: app name provided as argument
+    APP_NAME=$(strip_spaces "$(to_lower "$1")")
     if [ -z "$APP_NAME" ]; then
       print_error "App name cannot be empty."
-      continue
+      exit 1
     fi
-    if validate_app_name "$APP_NAME"; then
-      break
-    else
-      print_error "Invalid name. Use a single lowercase word (letters and digits only, starts with a letter, 2–31 chars). Cannot be: auth, api, admin, static, assets, health, app, apps."
+    if ! validate_app_name "$APP_NAME"; then
+      print_error "Invalid name '$APP_NAME'. Use a single lowercase word (letters and digits only, starts with a letter, 2–31 chars). Cannot be: auth, api, admin, static, assets, health, app, apps."
+      exit 1
     fi
-  done
+  else
+    # Interactive: prompt user
+    while true; do
+      printf "  App name (single word, e.g. donation): "
+      read -r APP_NAME_RAW
+      APP_NAME=$(strip_spaces "$(to_lower "$APP_NAME_RAW")")
+      if [ -z "$APP_NAME" ]; then
+        print_error "App name cannot be empty."
+        continue
+      fi
+      if validate_app_name "$APP_NAME"; then
+        break
+      else
+        print_error "Invalid name. Use a single lowercase word (letters and digits only, starts with a letter, 2–31 chars). Cannot be: auth, api, admin, static, assets, health, app, apps."
+      fi
+    done
+  fi
 
   # Derived names
   REPO_NAME="miniapp-${APP_NAME}-service"
@@ -190,14 +205,16 @@ main() {
   echo "    Directory   : ${TARGET_DIR}"
   echo ""
 
-  # Confirm
-  printf "  Create project? [Y/n]: "
-  read -r CONFIRM
-  CONFIRM="${CONFIRM:-Y}"
-  case "$CONFIRM" in
-    [Yy]*) ;;
-    *) echo "Aborted."; exit 0 ;;
-  esac
+  # Confirm (only in interactive mode)
+  if [ -z "${1:-}" ]; then
+    printf "  Create project? [Y/n]: "
+    read -r CONFIRM
+    CONFIRM="${CONFIRM:-Y}"
+    case "$CONFIRM" in
+      [Yy]*) ;;
+      *) echo "Aborted."; exit 0 ;;
+    esac
+  fi
 
   echo ""
 
