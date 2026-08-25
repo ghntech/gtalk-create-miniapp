@@ -3,7 +3,8 @@
 # Compatible with: Windows PowerShell 5.1+, PowerShell 7+
 #
 # Usage:
-#   .\create.ps1
+#   .\create.ps1                        # interactive mode
+#   .\create.ps1 -AppName <name>        # non-interactive (skips all prompts)
 #
 # macOS/Linux users: use create.sh instead (bash)
 #
@@ -17,6 +18,10 @@
 #   DB name     : gtalk_miniapp_<appname>_db (e.g. "gtalk_miniapp_donation_db")
 #   Owner       : <appname>_team             (e.g. "donation_team")
 # -----------------------------------------------------------------------------
+
+param(
+    [string]$AppName = ""
+)
 
 $ErrorActionPreference = "Stop"
 
@@ -100,15 +105,29 @@ Write-Host ""
 
 # App name
 $APP_NAME = ""
-while ($true) {
-    $input = Read-Host "  App name (single word, e.g. donation)"
-    $APP_NAME = $input.Trim().ToLower() -replace '\s',''
+if ($AppName -ne "") {
+    # Non-interactive: app name provided via parameter
+    $APP_NAME = $AppName.Trim().ToLower() -replace '\s',''
     if ($APP_NAME -eq "") {
         Write-Err "App name cannot be empty."
-        continue
+        exit 1
     }
-    if (Validate-AppName $APP_NAME) { break }
-    Write-Err "Invalid name. Use a single lowercase word (letters and digits only, starts with a letter, 2-31 chars). Cannot be: auth, api, admin, static, assets, health, app, apps."
+    if (-not (Validate-AppName $APP_NAME)) {
+        Write-Err "Invalid name '$APP_NAME'. Use a single lowercase word (letters and digits only, starts with a letter, 2-31 chars). Cannot be: auth, api, admin, static, assets, health, app, apps."
+        exit 1
+    }
+} else {
+    # Interactive: prompt user
+    while ($true) {
+        $input = Read-Host "  App name (single word, e.g. donation)"
+        $APP_NAME = $input.Trim().ToLower() -replace '\s',''
+        if ($APP_NAME -eq "") {
+            Write-Err "App name cannot be empty."
+            continue
+        }
+        if (Validate-AppName $APP_NAME) { break }
+        Write-Err "Invalid name. Use a single lowercase word (letters and digits only, starts with a letter, 2-31 chars). Cannot be: auth, api, admin, static, assets, health, app, apps."
+    }
 }
 
 # Derived names
@@ -130,10 +149,12 @@ Write-Host "    Owner       : $OWNER"
 Write-Host "    Directory   : $TARGET_DIR"
 Write-Host ""
 
-$confirm = Read-Host "  Create project? [Y/n]"
-if ($confirm -ne "" -and $confirm -notmatch '^[Yy]') {
-    Write-Host "Aborted."
-    exit 0
+if ($AppName -eq "") {
+    $confirm = Read-Host "  Create project? [Y/n]"
+    if ($confirm -ne "" -and $confirm -notmatch '^[Yy]') {
+        Write-Host "Aborted."
+        exit 0
+    }
 }
 
 Write-Host ""
